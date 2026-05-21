@@ -32,6 +32,7 @@ type Props = {
   onNewDefault?: () => void;
   onNewPrivate: () => void;
   onNewPreview: () => void;
+  onNewApiTester: () => void;
   onNewEditor: () => void;
   onClose: (id: number) => void;
   /** Pin (promote) a preview tab to persistent on double-click. */
@@ -47,6 +48,7 @@ export function TabBar({
   onNewDefault,
   onNewPrivate,
   onNewPreview,
+  onNewApiTester,
   onNewEditor,
   onClose,
   onPin,
@@ -217,6 +219,12 @@ export function TabBar({
                 {fmtShortcut(MOD_KEY, "P")}
               </span>
             </DropdownMenuItem>
+            {onNewApiTester && (
+              <DropdownMenuItem onSelect={() => onNewApiTester()}>
+                <HugeiconsIcon icon={Globe02Icon} size={14} strokeWidth={1.75} />
+                <span className="flex-1">API Tester</span>
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -246,6 +254,16 @@ function TabIcon({ tab }: { tab: Tab }) {
         size={14}
         strokeWidth={2}
         className="shrink-0 text-yellow-600 dark:text-yellow-400"
+      />
+    );
+  }
+  if (tab.kind === "api-tester") {
+    return (
+      <HugeiconsIcon
+        icon={Globe02Icon}
+        size={14}
+        strokeWidth={2}
+        className="shrink-0 text-violet-600 dark:text-violet-400"
       />
     );
   }
@@ -313,6 +331,7 @@ function labelFor(t: Tab): string {
   if (t.kind === "editor") return t.title;
   if (t.kind === "preview") return t.title;
   if (t.kind === "ai-diff") return t.title;
+  if (t.kind === "api-tester") return t.title;
   if (t.kind === "terminal") {
     if (t.sessionName) return t.sessionName;
     if (!t.cwd) return t.title;

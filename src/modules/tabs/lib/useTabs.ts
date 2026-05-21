@@ -11,7 +11,6 @@ import {
   type SplitDir,
 } from "@/modules/terminal/lib/panes";
 import { disposeSession } from "@/modules/terminal/lib/useTerminalSession";
-
 // Matches the renderer slot pool size — over this we'd evict an active leaf.
 export const MAX_PANES_PER_TAB = 4;
 
@@ -71,7 +70,13 @@ export type AiDiffTab = {
   isNewFile: boolean;
 };
 
-export type Tab = TerminalTab | EditorTab | PreviewTab | AiDiffTab;
+export type ApiTesterTab = {
+  id: number;
+  kind: "api-tester";
+  title: string;
+};
+
+export type Tab = TerminalTab | EditorTab | PreviewTab | AiDiffTab | ApiTesterTab;
 
 export type TabPatch = Partial<{
   title: string;
@@ -363,6 +368,25 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     return id;
   }, []);
 
+  const newApiTesterTab = useCallback(() => {
+    let found: number | null = null;
+    setTabs((curr) => {
+      const existing = curr.find((t) => t.kind === "api-tester");
+      if (existing) {
+        found = existing.id;
+        return curr;
+      }
+      const id = nextIdRef.current++;
+      found = id;
+      return [
+        ...curr,
+        { id, kind: "api-tester" as const, title: "API Tester" },
+      ];
+    });
+    if (found !== null) setActiveId(found);
+    return found;
+  }, []);
+
   const closeTab = useCallback((id: number) => {
     let toDispose: number[] = [];
     setTabs((curr) => {
@@ -626,6 +650,7 @@ export function useTabs(initial?: Partial<TerminalTab>) {
     openFileTab,
     pinTab,
     newPreviewTab,
+    newApiTesterTab,
     openAiDiffTab,
     setAiDiffStatus,
     closeAiDiffTab,

@@ -7,6 +7,9 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import {
+  AppleFinderIcon,
+  ComputerTerminal02Icon,
+  Copy01Icon,
   FileAddIcon,
   Folder01Icon,
   FolderAddIcon,
@@ -31,6 +34,7 @@ import { COMPACT_CONTENT, COMPACT_ITEM } from "./lib/menuItemClass";
 import { useFileTree } from "./lib/useFileTree";
 import { useGlobalShortcuts } from "@/modules/shortcuts";
 import type { WorkspaceEnv } from "@/modules/workspace";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export type FileExplorerHandle = {
   focus: () => void;
@@ -122,6 +126,14 @@ export const FileExplorer = forwardRef<FileExplorerHandle, Props>(
       }),
       [flat, selectedPath],
     );
+
+    useEffect(() => {
+      const w = getCurrentWindow();
+      const unlisten = w.onFocusChanged(({ payload: focused }) => {
+        if (focused && rootPath) tree.refresh(rootPath);
+      });
+      return () => void unlisten.then((u) => u());
+    }, [rootPath, tree]);
 
     useGlobalShortcuts({
       "explorer.search": () => {
@@ -369,6 +381,7 @@ export const FileExplorer = forwardRef<FileExplorerHandle, Props>(
                   className={COMPACT_ITEM}
                   onSelect={() => onRevealInTerminal(rootPath)}
                 >
+                  <HugeiconsIcon icon={ComputerTerminal02Icon} size={13} strokeWidth={2} />
                   Open in Terminal
                 </ContextMenuItem>
               )}
@@ -376,6 +389,7 @@ export const FileExplorer = forwardRef<FileExplorerHandle, Props>(
                 className={COMPACT_ITEM}
                 onSelect={() => void revealInFinder(rootPath)}
               >
+                <HugeiconsIcon icon={AppleFinderIcon} size={13} strokeWidth={2} />
                 Reveal in Finder
               </ContextMenuItem>
               <ContextMenuSeparator />
@@ -383,12 +397,14 @@ export const FileExplorer = forwardRef<FileExplorerHandle, Props>(
                 className={COMPACT_ITEM}
                 onSelect={() => tree.beginCreate(rootPath, "file")}
               >
+                <HugeiconsIcon icon={FileAddIcon} size={13} strokeWidth={2} />
                 New File
               </ContextMenuItem>
               <ContextMenuItem
                 className={COMPACT_ITEM}
                 onSelect={() => tree.beginCreate(rootPath, "dir")}
               >
+                <HugeiconsIcon icon={FolderAddIcon} size={13} strokeWidth={2} />
                 New Folder
               </ContextMenuItem>
               <ContextMenuSeparator />
@@ -396,12 +412,14 @@ export const FileExplorer = forwardRef<FileExplorerHandle, Props>(
                 className={COMPACT_ITEM}
                 onSelect={() => void copyToClipboard(rootPath)}
               >
+                <HugeiconsIcon icon={Copy01Icon} size={13} strokeWidth={2} />
                 Copy Path
               </ContextMenuItem>
               <ContextMenuItem
                 className={COMPACT_ITEM}
                 onSelect={() => tree.refresh(rootPath)}
               >
+                <HugeiconsIcon icon={Refresh01Icon} size={13} strokeWidth={2} />
                 Refresh
               </ContextMenuItem>
             </ContextMenuContent>

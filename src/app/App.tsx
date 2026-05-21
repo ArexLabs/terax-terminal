@@ -43,6 +43,7 @@ import {
   type SearchTarget,
 } from "@/modules/header";
 import { PreviewStack, type PreviewPaneHandle } from "@/modules/preview";
+import { ApiTesterStack } from "@/modules/api-tester";
 import { openSettingsWindow } from "@/modules/settings/openSettingsWindow";
 import { usePreferencesStore } from "@/modules/settings/preferences";
 import { onKeysChanged } from "@/modules/settings/store";
@@ -88,6 +89,7 @@ export default function App() {
     openFileTab,
     pinTab,
     newPreviewTab,
+    newApiTesterTab,
     openAiDiffTab,
     closeAiDiffTab,
     closeTab,
@@ -291,6 +293,7 @@ export default function App() {
   const isEditorTab = activeTab?.kind === "editor";
   const isPreviewTab = activeTab?.kind === "preview";
   const isAiDiffTab = activeTab?.kind === "ai-diff";
+  const isApiTesterTab = activeTab?.kind === "api-tester";
   const explorerWorkspace =
     activeTab?.kind === "terminal" && activeTab.workspace
       ? activeTab.workspace
@@ -647,6 +650,10 @@ export default function App() {
     [newPreviewTab],
   );
 
+  const openApiTester = useCallback(() => {
+    newApiTesterTab();
+  }, [newApiTesterTab]);
+
   const splitActivePaneInActiveTab = useCallback(
     (dir: "row" | "col") => {
       const t = tabsRef.current.find((x) => x.id === activeId);
@@ -861,6 +868,7 @@ export default function App() {
             onNewPrivate={openNewPrivateTab}
             onNewPreview={() => openPreviewTab("")}
             onNewEditor={() => setNewEditorOpen(true)}
+            onNewApiTester={openApiTester}
             onClose={handleClose}
             onPin={pinTab}
             onToggleSidebar={toggleSidebar}
@@ -964,6 +972,18 @@ export default function App() {
                         activeId={activeId}
                         onAccept={(id) => respondToApproval(id, true)}
                         onReject={(id) => respondToApproval(id, false)}
+                      />
+                    </div>
+                    <div
+                      className={cn(
+                        "absolute inset-0",
+                        !isApiTesterTab && "invisible pointer-events-none",
+                      )}
+                      aria-hidden={!isApiTesterTab}
+                    >
+                      <ApiTesterStack
+                        tabs={tabs}
+                        activeId={activeId}
                       />
                     </div>
                   </div>
