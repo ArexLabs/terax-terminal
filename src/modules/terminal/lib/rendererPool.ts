@@ -308,7 +308,8 @@ function scheduleUnhide(slot: Slot): void {
       slot.unhideRaf = null;
       slot.host.style.visibility = "";
       slot.fitAddon.fit();
-      slot.term.refresh(0, slot.term.rows - 1);
+      const rows = slot.term.rows;
+      if (rows > 0) slot.term.refresh(0, rows - 1);
       const leafId = slot.currentLeafId;
       if (leafId !== null && adapter?.isLeafFocused(leafId)) {
         slot.term.focus();
@@ -336,6 +337,11 @@ function rewireSlot(slot: Slot, p: AcquireParams): void {
   if (slot.term.cols !== p.cols || slot.term.rows !== p.rows) {
     p.onScopeChange(slot.term.cols, slot.term.rows);
   }
+  requestAnimationFrame(() => {
+    if (slot.currentLeafId !== p.leafId) return;
+    const rows = slot.term.rows;
+    if (rows > 0) slot.term.refresh(0, rows - 1);
+  });
   p.onSearchReady(slot.searchAddon);
 }
 
@@ -367,10 +373,21 @@ function setupResizeObserver(slot: Slot, p: AcquireParams): void {
       const w = container.clientWidth;
       const h = container.clientHeight;
       if (w === slot.lastW && h === slot.lastH) return;
+      if (w === 0 || h === 0) {
+        slot.lastW = w;
+        slot.lastH = h;
+        return;
+      }
       slot.lastW = w;
       slot.lastH = h;
       slot.fitAddon.fit();
-      slot.term.refresh(0, slot.term.rows - 1);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (slot.currentLeafId !== p.leafId) return;
+          const rows = slot.term.rows;
+          if (rows > 0) slot.term.refresh(0, rows - 1);
+        }),
+      );
       if (slot.ptyTimer) clearTimeout(slot.ptyTimer);
       slot.ptyTimer = setTimeout(flushPty, PTY_RESIZE_DEBOUNCE_MS);
     }, FIT_DEBOUNCE_MS);
