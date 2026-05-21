@@ -148,10 +148,7 @@ function createSlot(): Slot {
     if (isCtrlShiftC(event)) {
       event.preventDefault();
       if (event.type === "keydown") {
-        const sel = slot.term.getSelection();
-        if (sel) {
-          navigator.clipboard.writeText(sel).catch(console.error);
-        }
+        copyTerminalSelection(slot);
       }
       return false;
     }
@@ -609,6 +606,41 @@ function applyCursorBlinkOnSlot(slot: Slot, focused: boolean): void {
 
 export function getSlotForLeaf(leafId: number): Slot | null {
   return slots.find((s) => s.currentLeafId === leafId) ?? null;
+}
+
+function copyTerminalSelection(slot: Slot): void {
+  const sel = slot.term.getSelection();
+  if (!sel) return;
+
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(sel).catch(() => fallbackCopy(slot, sel));
+    return;
+  }
+
+  fallbackCopy(slot, sel);
+}
+
+function fallbackCopy(slot: Slot, text: string): void {
+  try {
+    const textarea = slot.term.element?.querySelector<HTMLTextAreaElement>(
+      "textarea",
+    );
+    if (!textarea) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0;";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      return;
+    }
+    const prev = textarea.value;
+    textarea.value = text;
+    textarea.select();
+    document.execCommand("copy");
+    textarea.value = prev;
+  } catch {}
 }
 
 function isCtrlBackspace(e: KeyboardEvent): boolean {
